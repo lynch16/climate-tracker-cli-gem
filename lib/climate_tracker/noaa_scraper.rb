@@ -1,5 +1,5 @@
 class ClimateTracker::NOAAScraper
-	attr_accessor :state, :data_type, :start_date, :start_date_back, :stop_date, :stop_date_back, :start_data, :stop_data
+	attr_accessor :state, :data_type, :start_date, :start_date_back, :stop_date, :stop_date_back, :start_data, :stop_data, :detla_t
 
 	def initialize(state, data_category, start_year, stop_year)
 		@start_date = start_year
@@ -71,6 +71,6 @@ class ClimateTracker::NOAAScraper
 			delta_descr_2 = "decrease"
 		end
 
-		delta = [delta_temp, delta_percent, delta_descr, delta_descr_2]#returns as array with absolute change and percentage
+		@delta_t = [delta_temp, delta_percent, delta_descr, delta_descr_2]#returns as array with absolute change and percentage
 	end
 end

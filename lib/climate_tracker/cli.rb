@@ -14,11 +14,26 @@ class ClimateTracker::CLI
 		puts "Welcome to the Climate Tracker - New England"
 		puts ""
 		puts ""
-		puts "This Climate Tracker displays the change in temperature that have occured within the user's lifetime among the states of New England"
+		puts "This Climate Tracker displays the average monthly temperature for any date the User requests for New England. 
+		Also, Users can find the change in temperature that has occured within the user's lifetime"
 		puts ""
-		puts "Let's get started"
-		puts ""
+		puts "Let's get started. Please enter 'start' to find average temperature, 'lifetime' to find amount of change in your lifetime."
 
+		@input = gets.strip.downcase
+		if @input == "lifetime"
+			self.lifetime
+		elsif @input == "start"
+			self.standard
+		end
+	end
+
+	def standard
+
+	end 
+
+	def lifetime
+		puts "Welcome to the 'In a Lifetime' calculator. To begin, please answer a few questions:"
+		puts ""
 		puts "Which state in New England would you like to search? (VT, ME, MA, NH)"
 
 		@state = gets.strip.upcase
@@ -51,5 +66,4 @@ class ClimateTracker::CLI
 		# @delta_precip = data.precip_difference
 	end
 end
-
 
