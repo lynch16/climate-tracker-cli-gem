@@ -1,9 +1,16 @@
 class ClimateTracker::NOAAScraper
-	attr_accessor :state, :data_type, :start_year, :stop_year, :start_data, :stop_data
+	attr_accessor :state, :data_type, :start_date, :start_date_back, :stop_date, :stop_date_back, :start_data, :stop_data
 
 	def initialize(state, data_category, start_year, stop_year)
-		@start_year = start_year
-		@stop_year = stop_year
+		@start_date = start_year
+		start_year_array = start_year.split("-")
+		start_year_array[0] = start_year_array[0].to_i-1
+		@start_date_back = start_year_array.join("-")
+
+		@stop_date = stop_year
+		stop_year_array = stop_year.split("-")
+		stop_year_array[0] = stop_year_array[0].to_i-1
+		@stop_date_back = stop_year_array.join("-")
 
 		case state
 		when "NH"
@@ -27,13 +34,13 @@ class ClimateTracker::NOAAScraper
 
 	def scrape
 		header = { "token" => "JPhvnfSrGIAesNPlFwRxKFsZTwPuYoum" }
-		uri_start = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{@state}&startdate=#{@start_year.to_i-1}-01-01&enddate=#{@start_year}-01-01&units=metric&limit=1000")
+		uri_start = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{@state}&startdate=#{@start_date_back}&enddate=#{@start_date}&units=metric&limit=1000")
 		request = Net::HTTP::Get.new(uri_start.request_uri, initheader = header)
 		http = Net::HTTP.new(uri_start.host, uri_start.port).start 
 		response = http.request(request)
 		@start_data = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February) 
 
-		uri_stop = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{@state}&startdate=#{@stop_year.to_i-1}-01-01&enddate=#{@stop_year}-01-01&units=metric&limit=1000")
+		uri_stop = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{@state}&startdate=#{@stop_date_back}&enddate=#{@stop_date}&units=metric&limit=1000")
 		request = Net::HTTP::Get.new(uri_stop.request_uri, initheader = header)
 		http = Net::HTTP.new(uri_stop.host, uri_stop.port).start 
 		response = http.request(request)
@@ -46,29 +53,22 @@ class ClimateTracker::NOAAScraper
 		total_start_values = 0.000
 		total_end_values = 0
 
-		#Calculate values for Start Year
-		start_data = @start_data["results"].collect do |result|
-			result["date"].include?("#{@start_year}-") ? result : nil #collect data taken during start year
+		@start_data["results"].each do |result| #collect only values from start year
+			total_start_values += result["value"].to_f
 		end
 
-		start_data.compact!.collect do |result| #collect only values from start year
-			total_start_values += result["value"].to_i
+		start_avg = total_start_values / @start_data["results"].size
+
+		@stop_data["results"].each do |result| #collect only values from end year
+			total_end_values += result["value"].to_f
 		end
 
-		start_avg = total_start_values / start_data.size.to_f
+		end_avg = total_end_values / @stop_data["results"].size
 
-		#Calculate values for End Year
-		end_data = @stop_data["results"].collect do |result|
-			result["date"].include?("#{@stop_year}-") ? result : nil #collect data taken during end year
-		end
+		delta_temp = (start_avg - end_avg).round(2) #if result is negative than temp went up
+		delta_percent =  ((end_avg/start_avg)*100).round(2) 
 
-		end_data.compact!.collect do |result| #collect only values from end year
-			total_end_values += result["value"].to_i
-		end
-
-		end_avg = total_end_values / end_data.size.to_f
-
-		delta_temp = [(start_avg - end_avg).round(2), ((end_avg/start_avg)*100).round(2) ] #returns as array with absolute change and percentage
+		delta = [delta_temp, delta_percent]#returns as array with absolute change and percentage
 	end
 
 	def precip_difference

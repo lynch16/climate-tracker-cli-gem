@@ -30,8 +30,10 @@ class ClimateTracker::CLI
 
 		decide = gets.strip
 		if decide == "y" || decide == "yes"
-			puts "Please pick a year (YYY)"
-			@stop_date = gets.strip
+			puts "Please pick a year (DD/MM/YYY)"
+			stop_date = gets.strip
+			stop_date_array = stop_date.split("/")
+			@stop_date = stop_date_array.reverse!.join("-")
 		else
 			@stop_date = @std_stop_date
 		end
@@ -41,7 +43,7 @@ class ClimateTracker::CLI
 	end
 
 	def compute
-		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_year, @stop_year).scrape
+		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_date, @stop_date).scrape
 		@delta_temp = data.temp_difference
 		# @delta_precip = data.precip_difference
 	end
