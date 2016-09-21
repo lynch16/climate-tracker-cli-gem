@@ -17,7 +17,7 @@ class ClimateTracker::NOAAScraper
 		end
 
 		if data_category == "T"
-			@data_type = "MNTM"
+			@data_type = "MMNT"
 		elsif data_category == "P"
 			@data_type = "TCPC"
 		else
@@ -46,6 +46,7 @@ class ClimateTracker::NOAAScraper
 		total_start_values = 0.000
 		total_end_values = 0
 
+		#Calculate values for Start Year
 		start_data = @start_data["results"].collect do |result|
 			result["date"].include?("#{@start_year}-") ? result : nil #collect data taken during start year
 		end
@@ -56,6 +57,7 @@ class ClimateTracker::NOAAScraper
 
 		start_avg = total_start_values / start_data.size.to_f
 
+		#Calculate values for End Year
 		end_data = @stop_data["results"].collect do |result|
 			result["date"].include?("#{@stop_year}-") ? result : nil #collect data taken during end year
 		end

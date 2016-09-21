@@ -10,7 +10,7 @@ class ClimateTracker::CLI
 		puts "Welcome to the Climate Tracker - New England"
 		puts "Which state in New England would you like to search? (VT, ME, MA, NH)"
 
-		@state = gets.strip
+		@state = gets.strip.upcase
 
 		puts "Would you like to compare temperature or precipitation or both? (T, P, B)"
 
