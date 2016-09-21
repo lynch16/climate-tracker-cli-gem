@@ -17,7 +17,7 @@ class ClimateTracker::NOAAScraper
 		end
 
 		if data_category == "T"
-			@data_type = "MMNT"
+			@data_type = "MNTM"
 		elsif data_category == "P"
 			@data_type = "TCPC"
 		else
@@ -31,7 +31,7 @@ class ClimateTracker::NOAAScraper
 		request = Net::HTTP::Get.new(uri_start.request_uri, initheader = header)
 		http = Net::HTTP.new(uri_start.host, uri_start.port).start 
 		response = http.request(request)
-		@start_data = JSON.parse(response.body)
+		@start_data = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February) 
 
 		uri_stop = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{@state}&startdate=#{@stop_year.to_i-1}-01-01&enddate=#{@stop_year}-01-01&units=metric&limit=1000")
 		request = Net::HTTP::Get.new(uri_stop.request_uri, initheader = header)
