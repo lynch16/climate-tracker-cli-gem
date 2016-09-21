@@ -1,13 +1,17 @@
 class ClimateTracker::CLI
-	attr_accessor :std_stop_year, :start_year, :stop_year, :data_category, :state, :delta_temp, :delta_precip
+	attr_accessor :std_stop_date, :start_date, :stop_date, :data_category, :state, :delta_temp, :delta_precip
 
 	def initialize
-		current_year = DateTime.now.to_date.year
-		@std_stop_year = current_year - 1 #Dataset doesn't go to 2016 so need to use 2015 as maximum year average.
+		current_date = DateTime.now.to_date.strftime("%F")
+		date_array = current_date.split("-")
+		date_array[0] = date_array[0].to_i-1
+		@std_stop_date = date_array.join("-") #Dataset doesn't go to 2016 so need to use 2015 as maximum year average.
 	end
 
 	def call
+		puts ""
 		puts "Welcome to the Climate Tracker - New England"
+		puts ""
 		puts "Which state in New England would you like to search? (VT, ME, MA, NH)"
 
 		@state = gets.strip
@@ -16,25 +20,25 @@ class ClimateTracker::CLI
 
 		@data_category = gets.strip.upcase
 
-		puts "What is the start year? (YYY)"
+		puts "What is your birthday? (MM/YYY)"
 
-		@start_year = gets.strip
+		@start_date = gets.strip
 
-		puts "Would you like to set an end year? If not, will use #{std_stop_year}. (y/n)"
+		puts "Would you like to set an end year? If not, will use #{std_stop_date}. (y/n)"
 
 		decide = gets.strip
 		if decide == "y" || decide == "yes"
 			puts "Please pick a year (YYY)"
-			@stop_year = gets.strip
+			@stop_date = gets.strip
 		else
-			@stop_year = @std_stop_year
+			@stop_date = @std_stop_date
 		end
 
 		self.compute
 	end
 
 	def compute
-		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_year, @stop_year).scrape
+		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_date, @stop_date).scrape
 		# @delta_temp = data.temp_difference
 		# @delta_precip = data.precip_difference
 	end
