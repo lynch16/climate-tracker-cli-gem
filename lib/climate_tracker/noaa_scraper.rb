@@ -23,13 +23,9 @@ class ClimateTracker::NOAAScraper
 			@state = "FIPS:50"
 		end
 
-		if data_category == "T"
-			@data_type = "MNTM"
-		elsif data_category == "P"
-			@data_type = "TCPC"
-		else
-			@data_type = "MNTM&datatype=TCPC"
-		end
+		@data_type = "MNTM"
+		# > MMNT, MMXT, MNTM (Min T, Max T, and Avg T monthly)
+		# > TCPC (Total Precip) TSNW (Total snowfall)
 	end
 
 	def scrape
@@ -66,21 +62,15 @@ class ClimateTracker::NOAAScraper
 		end_avg = total_end_values / @stop_data["results"].size
 
 		delta_temp = (end_avg - start_avg).round(2) #if result is positive than temp went up
-		delta_percent =  ((end_avg/start_avg)*100).round(2) 
+		delta_percent =  ((end_avg/start_avg)*100).round(2)
+		if delta_temp > 0 
+			delta_descr = "warmer" 
+			delta_descr_2 = "increase"
+		else 
+			delta_descr = "colder"
+			delta_descr_2 = "decrease"
+		end
 
-		delta = [delta_temp, delta_percent]#returns as array with absolute change and percentage
+		delta = [delta_temp, delta_percent, delta_descr, delta_descr_2]#returns as array with absolute change and percentage
 	end
-
-	def precip_difference
-	end
-
-	# ANNUAL > MMNT, MMXT, MNTM (Min T, Max T, and Avg T monthly)
-	# > TCPC (Total Precip) TSNW (Total snowfall)
-	
-	#LocationID - States
-	# ME: FIPS:23
-	# NH: FIPS:33
-	# MA: FIPS:25
-	# VT: FIPS:50
-
 end

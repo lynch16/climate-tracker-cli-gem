@@ -6,19 +6,22 @@ class ClimateTracker::CLI
 		date_array = current_date.split("-")
 		date_array[0] = date_array[0].to_i-1
 		@std_stop_date = date_array.join("-") #Dataset doesn't go to 2016 so need to use 2015 as maximum year average.
+		@data_category = "T" #used to expand app beyond Temperature
 	end
 
 	def call
 		puts ""
 		puts "Welcome to the Climate Tracker - New England"
 		puts ""
+		puts ""
+		puts "This Climate Tracker displays the change in temperature that have occured within the user's lifetime among the states of New England"
+		puts ""
+		puts "Let's get started"
+		puts ""
+
 		puts "Which state in New England would you like to search? (VT, ME, MA, NH)"
 
 		@state = gets.strip.upcase
-
-		puts "Would you like to compare temperature or precipitation or both? (T, P, B)"
-
-		@data_category = gets.strip.upcase
 
 		puts "What is your birthday? (DD/MM/YYY)"
 
@@ -26,7 +29,7 @@ class ClimateTracker::CLI
 		start_date_array = birthday.split("/")
 		@start_date = start_date_array.reverse!.join("-")
 
-		puts "Would you like to set an end year? If not, will use #{std_stop_date}. (y/n)"
+		puts "Would you like to set an alternative year to compare to? If not, will use today:#{std_stop_date}. (y/n)"
 
 		decide = gets.strip
 		if decide == "y" || decide == "yes"
@@ -39,7 +42,7 @@ class ClimateTracker::CLI
 		end
 
 		self.compute
-		puts "This year was #{@delta_temp[0]}°C warmer than #{@stop_year}, an increase of #{delta_temp[1]}%!"
+		puts "In #{state}, #{@stop_date} was #{@delta_temp[0]}°C #{delta_temp[2]} than #{@start_date} (#{(delta_temp[1]-100).round(2)}% #{delta_temp[3]})!"
 	end
 
 	def compute
