@@ -20,9 +20,11 @@ class ClimateTracker::CLI
 
 		@data_category = gets.strip.upcase
 
-		puts "What is your birthday? (MM/YYY)"
+		puts "What is your birthday? (DD/MM/YYY)"
 
-		@start_date = gets.strip
+		birthday = gets.strip
+		start_date_array = birthday.split("/")
+		@start_date = start_date_array.reverse!.join("-")
 
 		puts "Would you like to set an end year? If not, will use #{std_stop_date}. (y/n)"
 
