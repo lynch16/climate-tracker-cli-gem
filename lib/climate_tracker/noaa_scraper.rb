@@ -65,7 +65,7 @@ class ClimateTracker::NOAAScraper
 
 		end_avg = total_end_values / @stop_data["results"].size
 
-		delta_temp = (start_avg - end_avg).round(2) #if result is negative than temp went up
+		delta_temp = (end_avg - start_avg).round(2) #if result is positive than temp went up
 		delta_percent =  ((end_avg/start_avg)*100).round(2) 
 
 		delta = [delta_temp, delta_percent]#returns as array with absolute change and percentage
