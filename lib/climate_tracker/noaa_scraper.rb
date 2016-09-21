@@ -39,28 +39,27 @@ class ClimateTracker::NOAAScraper
 	end
 
 	def temp_difference
+		total_start = 0
+
 		start_data = @data["results"].collect do |result|
 			result["date"].include?("#{@start_year}-") ? result : nil #collect data taken during start year
 		end
 
 		start_data.compact!.collect do |result| #collect only values from start year
-			result["value"]
+			total_start += result["value"].to_i
 		end
 
-		start_data_avg = (start_data.reduce(:+).to_f / start_data.size)
+		start_avg = total_start / start_data.size
 
+		# end_data = @data["results"].collect do |result|
+		# 	result["date"].include?("#{@stop_year}-") ? result : nil #collect data taken during end year
+		# end
 
-		end_data = @data["results"].collect do |result|
-			result["date"].include?("#{@stop_year}-") ? result : nil #collect data taken during end year
-		end
+		# end_data.compact!.collect do |result| #collect only values from end year
+		# 	result["value"]
+		# end
 
-		end_data.compact!.collect do |result| #collect only values from end year
-			result["value"]
-		end
-
-
-
-
+		# start_avg
 	end
 
 	def precip_difference

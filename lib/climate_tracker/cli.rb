@@ -31,11 +31,12 @@ class ClimateTracker::CLI
 		end
 
 		self.compute
+		puts "#{@delta_temp}"
 	end
 
 	def compute
 		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_year, @stop_year).scrape
-		# @delta_temp = data.temp_difference
+		@delta_temp = data.temp_difference
 		# @delta_precip = data.precip_difference
 	end
 end
