@@ -14,7 +14,7 @@ class ClimateTracker::CLI
 		puts ""
 		puts "Which state in New England would you like to search? (VT, ME, MA, NH)"
 
-		@state = gets.strip
+		@state = gets.strip.upcase
 
 		puts "Would you like to compare temperature or precipitation or both? (T, P, B)"
 
@@ -37,11 +37,12 @@ class ClimateTracker::CLI
 		end
 
 		self.compute
+		puts "This year was #{@delta_temp[0]}°C warmer than #{@stop_year}, an increase of #{delta_temp[1]}%!"
 	end
 
 	def compute
-		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_date, @stop_date).scrape
-		# @delta_temp = data.temp_difference
+		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_year, @stop_year).scrape
+		@delta_temp = data.temp_difference
 		# @delta_precip = data.precip_difference
 	end
 end
