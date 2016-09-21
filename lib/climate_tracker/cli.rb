@@ -31,7 +31,7 @@ class ClimateTracker::CLI
 		end
 
 		self.compute
-		puts "#{@delta_temp}"
+		puts "This year was #{@delta_temp[0]}°C warmer than #{@stop_year}, an increase of #{delta_temp[1]}%!"
 	end
 
 	def compute

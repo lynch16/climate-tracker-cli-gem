@@ -66,7 +66,7 @@ class ClimateTracker::NOAAScraper
 
 		end_avg = total_end_values / end_data.size.to_f
 
-		delta_temp = [(end_avg - start_avg), ((end_avg/start_avg)*100) ] #returns as array with absolute change and percentage
+		delta_temp = [(start_avg - end_avg).round(2), ((end_avg/start_avg)*100).round(2) ] #returns as array with absolute change and percentage
 	end
 
 	def precip_difference
