@@ -43,6 +43,7 @@ class ClimateTracker::NOAA_Data
 			end
 
 			value_avgs[state] = (total_values / data["results"].size)
+			total_values = 0.000 #reset total values for next state
 		end
 		value_avgs #hash[state] = average
 	end
@@ -53,7 +54,7 @@ class ClimateTracker::NOAA_Data
 
 		year1_avgs = self.pull_data(year1).gather_values #hash[state] = average
 		year2_avgs = self.pull_data(year2).gather_values
-		
+
 		@@states.each do |state, state_code|
 			delta_temp = (year2_avgs[state] - year1_avgs[state]).round(2) #if result is positive than temp went up
 			delta_percent =  ((year2_avgs[state]/year1_avgs[state])*100).round(2)
