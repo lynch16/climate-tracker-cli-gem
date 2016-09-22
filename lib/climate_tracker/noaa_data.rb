@@ -42,7 +42,7 @@ class ClimateTracker::NOAA_Data
 				total_values += result["value"].to_f
 			end
 
-			value_avgs[state] = (total_values / data["results"].size)
+			value_avgs[state] = (((total_values / data["results"].size)*(9.0/5.0))+32.0)
 			total_values = 0.000 #reset total values for next state
 		end
 		value_avgs #hash[state] = average
@@ -59,7 +59,7 @@ class ClimateTracker::NOAA_Data
 			delta_temp = (year2_avgs[state] - year1_avgs[state]).round(2) #if result is positive than temp went up
 			delta_percent =  ((year2_avgs[state]/year1_avgs[state])*100).round(2)
 			if delta_temp > 0 
-				delta_descr = "warmer" 
+				delta_descr = "warmer"
 				delta_descr_2 = "increase"
 			else 
 				delta_descr = "colder"
@@ -68,6 +68,7 @@ class ClimateTracker::NOAA_Data
 
 			@data_push[state] = [delta_temp, delta_percent, delta_descr, delta_descr_2] #hash[state] = [temp change, %, warmer/colder, increase/decrease]
 		end
+		binding.pry
 		@data_push
 	end
 end

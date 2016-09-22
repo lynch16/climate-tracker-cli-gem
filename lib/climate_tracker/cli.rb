@@ -10,19 +10,26 @@ class ClimateTracker::CLI
 	end
 
 	def call
-		puts ""
-		puts "Welcome to the Climate Tracker - New England"
-		puts ""
-		puts ""
-		puts "This Climate Tracker displays the average monthly temperature for any date the User requests for New England. Also, Users can find the change in temperature that has occured within the user's lifetime"
-		puts ""
-		puts "Let's get started. Please enter 'start' to find average temperature, 'lifetime' to find amount of change in your lifetime."
+		@input = ""
+		unless @input == "exit" do
+			puts ""
+			puts "Welcome to the Climate Tracker - New England"
+			puts ""
+			puts ""
+			puts "This Climate Tracker displays the average monthly temperature for any date the User requests for New England."
+			puts ""
+			puts "Let's get started. Please enter 'start' to find average temperatures across NE, 'compare' to find the change in temperature between two dates."
 
-		@input = gets.strip.downcase
-		if @input == "lifetime"
-			self.lifetime
-		elsif @input == "start"
-			self.standard
+			@input = gets.strip.downcase
+			if @input == "compare"
+				self.compare
+			elsif @input == "start"
+				self.standard
+			end
+
+			puts ""
+			puts "Would you like to try another date (enter 'start') or compare two dates (enter 'compare')?"
+			@input = gets.strip.downcase
 		end
 	end
 
@@ -30,25 +37,26 @@ class ClimateTracker::CLI
 		puts "This program displays average monthly temperatures for New England for your chosen date.  Please enter a date: (DD/MM/YYY)"
 
 		date = gets.strip
+		puts "Processing..."
 		start_date_array = date.split("/")
 		@start_date = start_date_array.reverse!.join("-")
 
 		@start_date_temp = ClimateTracker::NOAA_Data.new.pull_data(@start_date).gather_values
 		@start_date_temp.each do |state, state_temp|
-			puts "#{state}'s monthly average temperature on #{@start_date} was #{state_temp.round(2)}°C."
+			puts "#{state}'s monthly average temperature on #{@start_date} was #{state_temp.round(2)}°F."
 		end
 	end 
 
-	def lifetime
-		puts "This is the 'In a Lifetime' calculator. To begin, please answer a few questions:"
+	def compare
+		puts "This is the temperature change calculator. To begin, please answer a couple questions:"
 		puts ""
 
-		puts "What is your birthday? (DD/MM/YYY)"
-		birthday = gets.strip
-		start_date_array = birthday.split("/")
+		puts "What is your target date? (DD/MM/YYY)"
+		target_date = gets.strip
+		start_date_array = target_date.split("/")
 		@start_date = start_date_array.reverse!.join("-")
 
-		puts "Would you like to set an alternative year to compare to? If not, will use today: #{@std_stop_date}. (y/n)"
+		puts "Would you like to set an alternative year to compare to? If not, will use one year ago today: #{@std_stop_date}. (y/n)"
 		decide = gets.strip
 		if decide == "y" || decide == "yes"
 			puts "Please pick a year (DD/MM/YYY)"
@@ -59,11 +67,11 @@ class ClimateTracker::CLI
 			@stop_date = @std_stop_date
 		end
 
-		puts "Thank you. Processing..."
+		puts "Processing..."
 		@delta_temp = ClimateTracker::NOAA_Data.new.temp_difference(@start_date, @stop_date)
 
 		@delta_temp.each do |state, state_changes|
-			puts "In #{state}, #{@stop_date} was #{state_changes[0]}°C #{state_changes[2]} than #{@start_date} (#{(state_changes[1]-100).round(2)}% #{state_changes[3]})!"
+			puts "In #{state}, #{@stop_date} was #{state_changes[0]}°F #{state_changes[2]} than #{@start_date} (#{(state_changes[1]-100).round(2)}% #{state_changes[3]})!"
 		end
 	end
 end
