@@ -14,8 +14,7 @@ class ClimateTracker::CLI
 		puts "Welcome to the Climate Tracker - New England"
 		puts ""
 		puts ""
-		puts "This Climate Tracker displays the average monthly temperature for any date the User requests for New England. 
-		Also, Users can find the change in temperature that has occured within the user's lifetime"
+		puts "This Climate Tracker displays the average monthly temperature for any date the User requests for New England. Also, Users can find the change in temperature that has occured within the user's lifetime"
 		puts ""
 		puts "Let's get started. Please enter 'start' to find average temperature, 'lifetime' to find amount of change in your lifetime."
 
@@ -28,11 +27,16 @@ class ClimateTracker::CLI
 	end
 
 	def standard
+		puts "This program displays average monthly temperatures for New England for your chosen date.  Please enter a date"
+
+		date = gets.strip
+		start_date_array = date.split("/")
+		@start_date = start_date_array.reverse!.join("-")
 
 	end 
 
 	def lifetime
-		puts "Welcome to the 'In a Lifetime' calculator. To begin, please answer a few questions:"
+		puts "This is the 'In a Lifetime' calculator. To begin, please answer a few questions:"
 		puts ""
 		puts "Which state in New England would you like to search? (VT, ME, MA, NH)"
 
@@ -44,7 +48,7 @@ class ClimateTracker::CLI
 		start_date_array = birthday.split("/")
 		@start_date = start_date_array.reverse!.join("-")
 
-		puts "Would you like to set an alternative year to compare to? If not, will use today:#{std_stop_date}. (y/n)"
+		puts "Would you like to set an alternative year to compare to? If not, will use today: #{std_stop_date}. (y/n)"
 
 		decide = gets.strip
 		if decide == "y" || decide == "yes"
@@ -61,8 +65,10 @@ class ClimateTracker::CLI
 	end
 
 	def compute
-		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_date, @stop_date).scrape
-		@delta_temp = data.temp_difference
+		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_date, @stop_date)
+		data.data_today
+		data.data_at_date
+		@delta_temp = data.temp_difference 
 		# @delta_precip = data.precip_difference
 	end
 end

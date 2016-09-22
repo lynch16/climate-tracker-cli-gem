@@ -1,7 +1,8 @@
 class ClimateTracker::NOAAScraper
-	attr_accessor :state, :data_type, :start_date, :start_date_back, :stop_date, :stop_date_back, :start_data, :stop_data, :detla_t
+	attr_accessor :state, :data_type, :start_date, :start_date_back, :stop_date, :stop_date_back, :start_data, :stop_data, :detla_t, :header
 
 	def initialize(state, data_category, start_year, stop_year)
+		@header = { "token" => "JPhvnfSrGIAesNPlFwRxKFsZTwPuYoum" }
 		@start_date = start_year
 		start_year_array = start_year.split("-")
 		start_year_array[0] = start_year_array[0].to_i-1
@@ -28,20 +29,23 @@ class ClimateTracker::NOAAScraper
 		# > TCPC (Total Precip) TSNW (Total snowfall)
 	end
 
-	def scrape
-		header = { "token" => "JPhvnfSrGIAesNPlFwRxKFsZTwPuYoum" }
+	def data_today
 		uri_start = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{@state}&startdate=#{@start_date_back}&enddate=#{@start_date}&units=metric&limit=1000")
-		request = Net::HTTP::Get.new(uri_start.request_uri, initheader = header)
+		request = Net::HTTP::Get.new(uri_start.request_uri, initheader = @header)
 		http = Net::HTTP.new(uri_start.host, uri_start.port).start 
 		response = http.request(request)
 		@start_data = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February) 
+		
+		self
+	end
 
+	def data_at_date
 		uri_stop = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{@state}&startdate=#{@stop_date_back}&enddate=#{@stop_date}&units=metric&limit=1000")
-		request = Net::HTTP::Get.new(uri_stop.request_uri, initheader = header)
+		request = Net::HTTP::Get.new(uri_stop.request_uri, initheader = @header)
 		http = Net::HTTP.new(uri_stop.host, uri_stop.port).start 
 		response = http.request(request)
 		@stop_data = JSON.parse(response.body)
-
+		
 		self
 	end
 
