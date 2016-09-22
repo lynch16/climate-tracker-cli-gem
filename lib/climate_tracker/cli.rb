@@ -1,5 +1,5 @@
 class ClimateTracker::CLI
-	attr_accessor :std_stop_date, :start_date, :stop_date, :data_category, :state, :delta_temp, :delta_precip
+	attr_accessor :std_stop_date, :start_date, :stop_date, :data_category, :state, :delta_temp
 
 	def initialize
 		current_date = DateTime.now.to_date.strftime("%F")
@@ -27,20 +27,21 @@ class ClimateTracker::CLI
 	end
 
 	def standard
-		puts "This program displays average monthly temperatures for New England for your chosen date.  Please enter a date"
+		puts "This program displays average monthly temperatures for New England for your chosen date.  Please enter a date:"
 
 		date = gets.strip
 		start_date_array = date.split("/")
 		@start_date = start_date_array.reverse!.join("-")
 
+		self.pull_data(@start_date)
 	end 
 
 	def lifetime
 		puts "This is the 'In a Lifetime' calculator. To begin, please answer a few questions:"
 		puts ""
-		puts "Which state in New England would you like to search? (VT, ME, MA, NH)"
+		# puts "Which state in New England would you like to search? (VT, ME, MA, NH)"
 
-		@state = gets.strip.upcase
+		# @state = gets.strip.upcase
 
 		puts "What is your birthday? (DD/MM/YYY)"
 
@@ -48,7 +49,7 @@ class ClimateTracker::CLI
 		start_date_array = birthday.split("/")
 		@start_date = start_date_array.reverse!.join("-")
 
-		puts "Would you like to set an alternative year to compare to? If not, will use today: #{std_stop_date}. (y/n)"
+		puts "Would you like to set an alternative year to compare to? If not, will use today: #{@std_stop_date}. (y/n)"
 
 		decide = gets.strip
 		if decide == "y" || decide == "yes"
@@ -60,16 +61,11 @@ class ClimateTracker::CLI
 			@stop_date = @std_stop_date
 		end
 
-		self.compute
-		puts "In #{state}, #{@stop_date} was #{@delta_temp[0]}°C #{delta_temp[2]} than #{@start_date} (#{(delta_temp[1]-100).round(2)}% #{delta_temp[3]})!"
-	end
+		@delta_temp = ClimateTracker::NOAA_Data.new.temp_difference(@start_date, @stop_date)
 
-	def compute
-		data = ClimateTracker::NOAAScraper.new(@state, @data_category, @start_date, @stop_date)
-		data.data_today
-		data.data_at_date
-		@delta_temp = data.temp_difference 
-		# @delta_precip = data.precip_difference
+		@delta_temp.each do |state, state_changes|
+			puts "In #{state}, #{@stop_date} was #{@delta_temp[state][0]}°C #{@delta_temp[state][2]} than #{@start_date} (#{(@delta_temp[state][1]-100).round(2)}% #{@delta_temp[state][3]})!"
+		end
 	end
 end
 

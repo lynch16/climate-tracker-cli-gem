@@ -6,7 +6,7 @@ require 'json'
 
 require "climate_tracker/version"
 require "climate_tracker/cli"
-require "climate_tracker/noaa_scraper.rb"
+require "climate_tracker/noaa_data.rb"
 
 module ClimateTracker
   # Your code goes here...
