@@ -1,18 +1,6 @@
 # ClimateTracker
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/climate_tracker`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
-
 ## Installation
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'climate_tracker'
-```
-
-And then execute:
+Execute:
 
     $ bundle
 
@@ -22,7 +10,7 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+This gem will retrieve the temperature data for New Hampshire, Massachussetts, Vermont, and Maine for any defined date or range. The first prompt requests the user to enter Start or Compare (not case dependent).  The Start case will retreive a list of all the temperatures in all the included states for a given date.  The Compare option will provide a comparision of the average change in temperatures across those same states between two user defined dates.
 
 ## Development
 
