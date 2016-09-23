@@ -1,5 +1,5 @@
 class ClimateTracker::CLI
-	attr_accessor :std_stop_date, :start_date, :start_date_temp, :stop_date, :state, :delta_temp
+	attr_accessor :std_stop_date, :start_date, :start_date_temp, :stop_date, :delta_temp
 
 	def initialize
 		current_date = DateTime.now.to_date.strftime("%F")
@@ -18,35 +18,42 @@ class ClimateTracker::CLI
 
 		@input = ""
 		until @input == "exit" do
-			puts "Please type 'start' to find average temperatures across New England, 'compare' to find the change in temperature between two dates."
+
+			puts "Please type 'list' to find average temperatures for your chosen state, 'compare' to find the change in temperature between two dates, 'exit' to exit."
 
 			@input = gets.strip.downcase
-			if @input == "compare"
-				self.compare
-			elsif @input == "start"
-				self.standard
-			else 
-				puts "Please enter either Start or Compare:"
+			until self.input_valid? do
+				puts "Please enter either 'list' or 'compare':"
 				@input = gets.strip.downcase
-				if @input == "compare"
-					self.compare
-				elsif @input == "start"
-					self.standard
-				else 
-					puts "Please enter either Start or Compare:"
-					@input = gets.strip.downcase
-				end
 			end
 
-			puts ""
-			puts "Would you like to try again? (type exit to exit)"
-			@input = gets.strip.downcase
+			if @input == "compare"
+				self.compare_new
+			elsif @input == "list"
+				self.list
+			elsif @input == "exit"
+				break
+			end
 		end
 	end
 
-	def standard
-		puts "This feature displays average monthly temperatures for New England for your chosen date.  Please enter a date: (DD/MM/YYY)"
+	def pick_state
+		puts "Please pick your desired state. To see a list of state codes, type 'states':"
+		state = gets.strip.upcase
+		if state == 'STATES' || state == 'STATE'
+			puts "#{ClimateTracker::NOAA_Data.states}"
+			self.pick_state
+		else
+			@state = state
+		end
+	end
 
+
+	def list
+		puts "This feature displays average monthly temperatures for your chosen date and state. Before we begin, a target state must be entered (this can be changed later)."
+		self.pick_state
+
+		puts "Great. Now please pick a date (DD/MM/YYY)"
 		date = gets.strip
 		until self.date_valid?(date)	
 			puts "Invalid date or date format.  Please enter your target date: (DD/MM/YYY)"
@@ -55,15 +62,20 @@ class ClimateTracker::CLI
 		puts "Processing..."
 		@start_date = self.standarize_date(date)
 
-		@start_date_temp = ClimateTracker::NOAA_Data.new.pull_data(@start_date).gather_values
-		@start_date_temp.each do |state, state_temp|
-			puts "#{state}'s monthly average temperature on #{@start_date} was #{state_temp.round(2)}°F."
-		end
+		#create NOAA_Data obj; download avg monthly temp values for date & state, find average for year.
+		@list_obj = ClimateTracker::NOAA_Data.new
+		temp = @list_obj.pull_data(@start_date, @state).gather_values
+		puts "#{@state}'s monthly average temperature on #{@start_date} was #{temp}°F."
+		@input = ""
+		puts "Would you like to pick a new state or compare this result to another date? (list or compare)"
 	end 
 
-	def compare
+	def compare_new
 		puts "This is the temperature change calculator. To begin, please answer a couple questions:"
 		puts ""
+
+		puts "Please first pick a target state:"
+		self.pick_state
 
 		puts "What is your target date? (DD/MM/YYY)"
 		target_date = gets.strip
@@ -88,11 +100,13 @@ class ClimateTracker::CLI
 		end
 
 		puts "Processing..."
-		@delta_temp = ClimateTracker::NOAA_Data.new.temp_difference(@start_date, @stop_date)
+		@compare_obj = ClimateTracker::NOAA_Data.new
+		delta_temp = @compare_obj.temp_difference(@start_date, @stop_date, @state)
 
-		@delta_temp.each do |state, state_changes|
-			puts "In #{state}, #{@stop_date} was #{state_changes[0]}°F #{state_changes[2]} than #{@start_date} (#{(state_changes[1]-100).round(2)}% #{state_changes[3]})!"
-		end
+		puts "In #{@state}, #{@stop_date} was #{delta_temp[0]}°F #{delta_temp[2]} than #{@start_date} (#{(delta_temp[1]-100).round(2)}% #{delta_temp[3]})!"
+	end
+
+	def compare_prior
 	end
 
 	def date_valid?(date)
@@ -108,5 +122,8 @@ class ClimateTracker::CLI
 		standard_date = date_array.reverse!.join("-")
 	end
 
+	def input_valid?
+		@input == "compare" || @input == "list" || @input == "exit" ? true : false
+	end
 end
 

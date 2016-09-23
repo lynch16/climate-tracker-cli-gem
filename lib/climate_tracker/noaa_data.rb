@@ -1,74 +1,78 @@
 class ClimateTracker::NOAA_Data
-	attr_accessor :data_type, :data_dump_all_states, :header, :data_push
+	attr_accessor :data_type, :data_dump, :header, :data_push
 
-	@@states = {
-		"NH" => "FIPS:33",
-		"ME" => "FIPS:23",
-		"MA" => "FIPS:25",
-		"VT" => "FIPS:50" 
-	}
+	@@states = {}
+	@@header = { "token" => "JPhvnfSrGIAesNPlFwRxKFsZTwPuYoum" }
 
 	def initialize
-		@header = { "token" => "JPhvnfSrGIAesNPlFwRxKFsZTwPuYoum" }
-		@data_dump_all_states = {}
-		@data_push = {}
 		@data_type = "MNTM"
+
+		#Possible Data Types
 		# > MMNT, MMXT, MNTM (Min T, Max T, and Avg T monthly)
 		# > TCPC (Total Precip) TSNW (Total snowfall)
 	end
 
-	def pull_data(date)
+	def self.states
+		#populate available states
+		uri_start = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/locations?locationcategoryid=ST&limit=52")
+		request = Net::HTTP::Get.new(uri_start.request_uri, initheader = @@header)
+		http = Net::HTTP.new(uri_start.host, uri_start.port).start 
+		response = http.request(request)
+		data = JSON.parse(response.body) 
+				binding.pry
+		data["results"].collect do |result|
+			st_name = result["name"]
+			st_id = result["id"]
+			@@states[st_name] = st_id
+		end
+		@@states.keys
+	end
+
+	def pull_data(date, state)
+		#NOAA program requires 1 year range for dataset ANNUAL. Create 1 year ago range from given date
 		date_array = date.split("-")
 		date_array[0] = date_array[0].to_i-1
 		last_year_date = date_array.join("-")
 		year_date = date
 
-		@@states.each do |state, state_code|
-			uri_start = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{state_code}&startdate=#{last_year_date}&enddate=#{year_date}&units=metric&limit=1000")
-			request = Net::HTTP::Get.new(uri_start.request_uri, initheader = @header)
-			http = Net::HTTP.new(uri_start.host, uri_start.port).start 
-			response = http.request(request)
-			@data_dump_all_states[state] = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February) ur
-		end
-
+		#retrieve appropriate state_code and download temperatures for above range
+		state_code = @@states[state]
+		uri_start = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{state_code}&startdate=#{last_year_date}&enddate=#{year_date}&units=metric&limit=1000")
+		request = Net::HTTP::Get.new(uri_start.request_uri, initheader = @@header)
+		http = Net::HTTP.new(uri_start.host, uri_start.port).start 
+		response = http.request(request)
+		@data_dump = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February) ur
+		
 		self
 	end
 
 	def gather_values
 		total_values = 0.000
-		value_avgs = {}
-		@data_dump_all_states.each do |state, data|
-			data["results"].each do |result| 
-				total_values += result["value"].to_f
-			end
-
-			value_avgs[state] = (((total_values / data["results"].size)*(9.0/5.0))+32.0)
-			total_values = 0.000 #reset total values for next state
+		@data_dump["results"].each do |result| 
+			total_values += result["value"].to_f
 		end
-		value_avgs #hash[state] = average
+
+		value_avg = (((total_values / @data_dump["results"].size)*(9.0/5.0))+32.0)
+		
+		value_avg #float
 	end
 
-	def temp_difference(year1, year2)
-		year1_avgs = {}
-		year2_avgs = {}
+	def temp_difference(year1, year2, state)
+		year1_avgs = self.pull_data(year1, state).gather_values #hash[state] = average
+		year2_avgs = self.pull_data(year2, state).gather_values
 
-		year1_avgs = self.pull_data(year1).gather_values #hash[state] = average
-		year2_avgs = self.pull_data(year2).gather_values
-
-		@@states.each do |state, state_code|
-			delta_temp = (year2_avgs[state] - year1_avgs[state]).round(2) #if result is positive than temp went up
-			delta_percent =  ((year2_avgs[state]/year1_avgs[state])*100).round(2)
-			if delta_temp > 0 
-				delta_descr = "warmer"
-				delta_descr_2 = "increase"
-			else 
-				delta_descr = "colder"
-				delta_descr_2 = "decrease"
-			end
-
-			@data_push[state] = [delta_temp, delta_percent, delta_descr, delta_descr_2] #hash[state] = [temp change, %, warmer/colder, increase/decrease]
+		delta_temp = (year2_avgs - year1_avgs).round(2) #if result is positive than temp went up
+		delta_percent =  ((year2_avgs/year1_avgs)*100).round(2)
+		if delta_temp > 0 
+			delta_descr = "warmer"
+			delta_descr_2 = "increase"
+		else 
+			delta_descr = "colder"
+			delta_descr_2 = "decrease"
 		end
-		binding.pry
+
+		@data_push = [delta_temp, delta_percent, delta_descr, delta_descr_2] #hash[state] = [temp change, %, warmer/colder, increase/decrease]
+
 		@data_push
 	end
 end
