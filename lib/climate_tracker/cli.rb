@@ -1,11 +1,12 @@
 class ClimateTracker::CLI
-	attr_accessor :std_stop_date, :start_date, :start_date_temp, :stop_date, :delta_temp
+	attr_accessor :std_stop_date, :start_date, :start_date_temp, :stop_date, :delta_temp, :data_set, :temp_1, :temp_2
 
 	def initialize
 		current_date = DateTime.now.to_date.strftime("%F")
 		date_array = current_date.split("-")
 		date_array[0] = date_array[0].to_i-1
 		@std_stop_date = date_array.join("-") #Dataset doesn't go to 2016 so need to use 2015 as maximum year.
+		@data_set = ClimateTracker::NOAA_Data.new
 	end
 
 	def call
@@ -28,7 +29,7 @@ class ClimateTracker::CLI
 			end
 
 			if @input == "compare"
-				self.compare_new
+				self.compare
 			elsif @input == "list"
 				self.list
 			elsif @input == "exit"
@@ -40,6 +41,7 @@ class ClimateTracker::CLI
 	def pick_state
 		puts "Please pick your desired state. To see a list of state codes, type 'states':"
 		state = gets.strip.upcase
+		puts "Gathering states..."
 		if state == 'STATES' || state == 'STATE'
 			puts "#{ClimateTracker::NOAA_Data.states}"
 			self.pick_state
@@ -54,59 +56,65 @@ class ClimateTracker::CLI
 		self.pick_state
 
 		puts "Great. Now please pick a date (DD/MM/YYY)"
-		date = gets.strip
-		until self.date_valid?(date)	
-			puts "Invalid date or date format.  Please enter your target date: (DD/MM/YYY)"
-			date = gets.strip
-		end
-		puts "Processing..."
+		date = self.target_date
 		@start_date = self.standarize_date(date)
 
-		#create NOAA_Data obj; download avg monthly temp values for date & state, find average for year.
-		@list_obj = ClimateTracker::NOAA_Data.new
-		temp = @list_obj.pull_data(@start_date, @state).gather_values
-		puts "#{@state}'s monthly average temperature on #{@start_date} was #{temp}°F."
+		puts "Processing..."
+		#download avg monthly temp values for date & state, find average for year.
+		@temp_1 = @data_set.pull_data(@start_date, @state).gather_values
+		puts "#{@state}'s monthly average temperature on #{@start_date} was #{@temp_1}°F."
 		@input = ""
 		puts "Would you like to pick a new state or compare this result to another date? (list or compare)"
 	end 
 
-	def compare_new
+	def compare
 		puts "This is the temperature change calculator. To begin, please answer a couple questions:"
 		puts ""
 
-		puts "Please first pick a target state:"
-		self.pick_state
-
-		puts "What is your target date? (DD/MM/YYY)"
-		target_date = gets.strip
-		until self.date_valid?(target_date)	
-			puts "Invalid date or date format.  Please enter your target date (DD/MM/YYY)"
-			target_date = gets.strip
+		puts "Would you still like to use the target state: #{@state}? (y/n)"
+		@input = get.strip.downcase
+		if @input == "n"
+			puts "Please first pick a target state:"
+			self.pick_state
 		end
-		@start_date = self.standarize_date(target_date)
+
+		if @data_set.pull_count > 1
+			puts "Would you like to pick a new target date?"
+			if @input == "y"
+				puts "What is your target date? (DD/MM/YYY)"
+				target_date = self.target_date
+				@start_date = self.standarize_date(target_date)
+			end
+		else
+			puts "What is your target date? (DD/MM/YYY)"
+			target_date = self.target_date
+			@start_date = self.standarize_date(target_date)
+		end
 
 		puts "Would you like to set a year to compare to? If not, will use one year ago today: #{@std_stop_date}. (y/n)"
 		decide = gets.strip
 		if decide == "y" || decide == "yes"
 			puts "Please pick a date: (DD/MM/YYY)"
-			stop_date = gets.strip
-			until self.date_valid?(stop_date)	
-				puts "Invalid date or date format.  Please enter your target date: (DD/MM/YYY)"
-				stop_date = gets.strip
-			end
+			stop_date = self.target_date
 			@stop_date = self.standarize_date(stop_date)
 		else
 			@stop_date = @std_stop_date
 		end
 
 		puts "Processing..."
-		@compare_obj = ClimateTracker::NOAA_Data.new
-		delta_temp = @compare_obj.temp_difference(@start_date, @stop_date, @state)
+		delta_temp = @data_set.temp_difference(@start_date, @stop_date, @state)
 
 		puts "In #{@state}, #{@stop_date} was #{delta_temp[0]}°F #{delta_temp[2]} than #{@start_date} (#{(delta_temp[1]-100).round(2)}% #{delta_temp[3]})!"
 	end
 
-	def compare_prior
+	def target_date
+		new_date = gets.strip
+		binding.pry
+		until self.date_valid?(new_date)	
+			puts "Invalid date or date format.  Please enter your target date: (DD/MM/YYY)"
+			new_date = gets.strip
+		end
+		new_date
 	end
 
 	def date_valid?(date)
