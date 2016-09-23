@@ -1,12 +1,13 @@
 class ClimateTracker::NOAA_Data
-	attr_accessor :data_type, :data_dump, :header, :data_push
+	attr_accessor :data_type, :data_dump, :header, :delta_temp, :pull_count, :re_pull, :value_avg
 
 	@@states = {}
 	@@header = { "token" => "JPhvnfSrGIAesNPlFwRxKFsZTwPuYoum" }
 
 	def initialize
 		@data_type = "MNTM"
-
+		@pull_count = 0
+		@re_pull = true
 		#Possible Data Types
 		# > MMNT, MMXT, MNTM (Min T, Max T, and Avg T monthly)
 		# > TCPC (Total Precip) TSNW (Total snowfall)
@@ -43,6 +44,8 @@ class ClimateTracker::NOAA_Data
 		response = http.request(request)
 		@data_dump = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February) ur
 		
+		@pull_count += 1
+		@re_pull = true
 		self
 	end
 
@@ -52,18 +55,18 @@ class ClimateTracker::NOAA_Data
 			total_values += result["value"].to_f
 		end
 
-		value_avg = (((total_values / @data_dump["results"].size)*(9.0/5.0))+32.0)
+		@value_avg = (((total_values / @data_dump["results"].size)*(9.0/5.0))+32.0)
 		
-		value_avg #float
+		@value_avg #float
 	end
 
 	def temp_difference(year1, year2, state)
-		year1_avgs = self.pull_data(year1, state).gather_values #hash[state] = average
+		self.re_pull == true ? year1_avgs = self.pull_data(year1, state).gather_values : year1_avgs = @value_avg
 		year2_avgs = self.pull_data(year2, state).gather_values
 
-		delta_temp = (year2_avgs - year1_avgs).round(2) #if result is positive than temp went up
-		delta_percent =  ((year2_avgs/year1_avgs)*100).round(2)
-		if delta_temp > 0 
+		delta_temp = (year2_avgs - year1_avgs).round(2) 
+		delta_percent = ((year2_avgs/year1_avgs)*100).round(2)
+		if delta_temp > 0 #if delta_temp is positive than temp went up
 			delta_descr = "warmer"
 			delta_descr_2 = "increase"
 		else 
@@ -71,8 +74,8 @@ class ClimateTracker::NOAA_Data
 			delta_descr_2 = "decrease"
 		end
 
-		@data_push = [delta_temp, delta_percent, delta_descr, delta_descr_2] #hash[state] = [temp change, %, warmer/colder, increase/decrease]
+		@delta_temp = [delta_temp, delta_percent, delta_descr, delta_descr_2] #hash[state] = [temp change, %, warmer/colder, increase/decrease]
 
-		@data_push
+		@delta_temp
 	end
 end
