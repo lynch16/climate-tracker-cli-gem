@@ -1,5 +1,5 @@
 class ClimateTracker::NOAA_Data
-	attr_accessor :data_type, :data_dump, :header, :delta_temp, :pull_count, :re_pull, :value_avg
+	attr_accessor :data_type, :data_dump, :delta_temp, :pull_count, :re_pull, :data_avg, :year1_avgs, :year2_avgs
 
 	@@states = {}
 	@@header = { "token" => "JPhvnfSrGIAesNPlFwRxKFsZTwPuYoum" }
@@ -14,16 +14,18 @@ class ClimateTracker::NOAA_Data
 	end
 
 	def self.states
-		#populate available states
-		uri = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/locations?locationcategoryid=ST&limit=52")
-		request = Net::HTTP::Get.new(uri.request_uri, initheader = @@header)
-		http = Net::HTTP.new(uri.host, uri.port).start 
-		response = http.request(request)
-		data = JSON.parse(response.body) 
-		data["results"].collect do |result|
-			st_name = result["name"]
-			st_id = result["id"]
-			@@states[st_name] = st_id
+		if @@states.empty?
+			#populate available states
+			uri = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/locations?locationcategoryid=ST&limit=52")
+			request = Net::HTTP::Get.new(uri.request_uri, initheader = @@header)
+			http = Net::HTTP.new(uri.host, uri.port).start 
+			response = http.request(request)
+			data = JSON.parse(response.body) 
+			data["results"].collect do |result|
+				st_name = result["name"].upcase
+				st_id = result["id"]
+				@@states[st_name] = st_id
+			end
 		end
 		@@states.keys
 	end
@@ -47,7 +49,7 @@ class ClimateTracker::NOAA_Data
 		@data_dump = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February) ur
 		
 		@pull_count += 1
-		@re_pull = true
+		@re_pull = false
 		self
 	end
 
@@ -57,17 +59,24 @@ class ClimateTracker::NOAA_Data
 			total_values += result["value"].to_f
 		end
 
-		@value_avg = (((total_values / @data_dump["results"].size)*(9.0/5.0))+32.0)
+		@data_avg = (((total_values / @data_dump["results"].size)*(9.0/5.0))+32.0)
 		
-		@value_avg #float
+		@data_avg #float
 	end
 
 	def temp_difference(year1, year2, state)
-		self.re_pull == true ? year1_avgs = self.pull_data(year1, state).gather_values : year1_avgs = @value_avg
-		year2_avgs = self.pull_data(year2, state).gather_values
+		if self.re_pull == true 
+			@year1_avgs = self.pull_data(year1, state).gather_values 
+		elsif @year1_avgs == nil
+			@year1_avgs = @data_avg
+		elsif @year2_avgs != @data_avg
+			@year1_avgs = @data_avg
+		end
 
-		delta_temp = (year2_avgs - year1_avgs).round(2) 
-		delta_percent = ((year2_avgs/year1_avgs)*100).round(2)
+		@year2_avgs = self.pull_data(year2, state).gather_values
+		binding.pry
+		delta_temp = (@year2_avgs - @year1_avgs).round(2) 
+		delta_percent = ((@year2_avgs/@year1_avgs)*100).round(2)
 		if delta_temp > 0 #if delta_temp is positive than temp went up
 			delta_descr = "warmer"
 			delta_descr_2 = "increase"

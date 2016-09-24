@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Will Lynch"]
   spec.email         = ["will.lynch91@gmail.com"]
 
-  spec.summary       = %q{Request interface for climate data compiled by NOAA}
-  spec.description   = %q{Creates a comparison from user's birth year to current year displaying avg temp and precip changes}
+  spec.summary       = %q{Access average monthly temperatures through data retrieved from the NOAA Cliamte API}
+  spec.description   = %q{Allows anyone to view the average monthly temperature for any state in the US between 1831 and 2015.  It also allows users to compare the averages across date ranges and display changes over time.}
   spec.homepage      = "https://github.com/lynch16/climate-tracker-cli-gem"
   spec.license       = "MIT"
 

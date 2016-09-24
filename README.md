@@ -10,7 +10,7 @@ Or install it yourself as:
 
 ## Usage
 
-This gem will retrieve the temperature data for New Hampshire, Massachussetts, Vermont, and Maine for any defined date or range. The first prompt requests the user to enter Start or Compare (not case dependent).  The Start case will retreive a list of all the temperatures in all the included states for a given date.  The Compare option will provide a comparision of the average change in temperatures across those same states between two user defined dates.
+This gem uses NOAA Climate API to retrieve the temperature data for any state in the U.S. for any defined date or range. There are two functions of the gem: Start and Compare (not case dependent).  The Start function will retreive a list of the average monthly temperature in the desired state for a given date.  This is found by averaging the average monthly temperature of every NOAA Station in the given state.  The Compare function will provide a comparision of the average change in average monthly temperatures in a state between two user defined dates. Of note, NOAA only has published through 2015 so the datasets are limited to February 1, 1831 - November 1, 2015.  The most recent available date should improve overtime and this README will be updated at each major version to correct the most recent date of that time.  This gem is also set to try and limit the number of queries from NOAA Climate API through the use of a "pull_count".  The overall average from the prior search will save allowing the user to more quickly use the Compare function.
 
 ## Development
 

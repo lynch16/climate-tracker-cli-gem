@@ -22,7 +22,7 @@ class ClimateTracker::CLI
 		@input = ""
 		until @input == "exit" do
 
-			puts "Please type 'list' to find average temperatures for your chosen state, 'compare' to find the change in temperature between two dates, 'exit' to exit."
+			puts "Please type 'list' to find average temperature for your chosen state at a selected date, 'compare' to find the change in temperature between two dates, 'exit' to exit."
 
 			@input = gets.strip.downcase
 			until self.input_valid? do
@@ -40,30 +40,13 @@ class ClimateTracker::CLI
 		end
 	end
 
-	def pick_state
-		puts "Please pick your desired state. To see a list of state codes, type 'states':"
-		state = gets.strip.upcase
-		if state == 'STATES' || state == 'STATE'
-			puts "Gathering states..."
-			puts "#{ClimateTracker::NOAA_Data.states}"
-			puts ""
-			self.pick_state
-		else
-			@state = state
-		end
-	end
-
-
 	def list
 		puts "This function will return the average monthly temperature for a given date in your chosen state."
 		puts ""
 		puts "Would you still like to use the target state: #{@state}? (y/n)"
 		@input = gets.strip.downcase
-		if @input == "y"
-			if @data_set.pull_count > 0
-				@data_set.re_pull = false
-			end
-		elsif @input == "n"
+		if @input == "n"
+			@data_set.re_pull = true
 			puts "Please pick a target state:"
 			self.pick_state
 		end
@@ -75,33 +58,30 @@ class ClimateTracker::CLI
 		puts "Processing..."
 		#download avg monthly temp values for date & state, find average for year.
 		temp = @data_set.pull_data(@start_date, @state).gather_values
-		puts "#{@state}'s monthly average temperature on #{@start_date} was #{temp}°F."
+		puts "#{@state}'s monthly average temperature on #{@start_date} was #{temp.round(2)}°F."
 		@input = ""
 		puts "Would you like to pick a new state or compare this result to another date? (list or compare)"
 	end 
 
 	def compare
-		puts "This is the temperature change calculator. To begin, please answer a couple questions:"
+		puts "This is the temperature comparision calculator. To begin, please answer a couple questions:"
 		puts ""
 
 		puts "Would you still like to use the target state: #{@state}? (y/n)"
 		@input = gets.strip.downcase
-		if @input == "y"
-			@data_set.re_pull = false
-		elsif @input == "n"
-			puts "Please pick a target state:"
+		if @input == "n"
+			@data_set.re_pull = true
 			self.pick_state
 		end
 
 		if @data_set.pull_count >= 1
-			puts "Would you like to pick a new target date? Current target is #{@start_date}"
+			puts "Would you like to pick a new target date? Current target is #{@start_date}? (y/n)"
 			@input = gets.strip.downcase
 			if @input == "y"
 				puts "What is your target date? (DD/MM/YYY)"
 				target_date = self.pick_date
 				@start_date = self.standarize_date(target_date)
-			else
-				@data_set.re_pull = false
+				@data_set.re_pull = true
 			end
 		else
 			puts "What is your target date? (DD/MM/YYY)"
@@ -125,12 +105,30 @@ class ClimateTracker::CLI
 		puts "In #{@state}, #{@stop_date} was #{@delta_temp[0]}°F #{@delta_temp[2]} than #{@start_date} (#{(@delta_temp[1]-100).round(2)}% #{@delta_temp[3]})!"
 	end
 
+	def pick_state
+		puts "Please pick your desired state. To see a list of states, type 'states':"
+		state = gets.strip.upcase
+		if state == 'STATES' || state == 'STATE'
+			puts "Gathering states..."
+			puts "#{ClimateTracker::NOAA_Data.states}"
+			puts ""
+			self.pick_state
+		elsif @data_set.class.states.include?(state)
+			puts "Accepted."
+			@state = state
+		else
+			puts "State not recognized."
+			self.pick_state
+		end
+	end
+
 	def pick_date
 		new_date = gets.strip
 		until self.date_valid?(new_date)	
 			puts "Invalid date or date format.  Please enter your target date: (DD/MM/YYY)"
 			new_date = gets.strip
 		end
+		puts "Accepted."
 		new_date
 	end
 
