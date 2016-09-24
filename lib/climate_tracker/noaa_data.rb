@@ -15,12 +15,11 @@ class ClimateTracker::NOAA_Data
 
 	def self.states
 		#populate available states
-		uri_start = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/locations?locationcategoryid=ST&limit=52")
-		request = Net::HTTP::Get.new(uri_start.request_uri, initheader = @@header)
-		http = Net::HTTP.new(uri_start.host, uri_start.port).start 
+		uri = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/locations?locationcategoryid=ST&limit=52")
+		request = Net::HTTP::Get.new(uri.request_uri, initheader = @@header)
+		http = Net::HTTP.new(uri.host, uri.port).start 
 		response = http.request(request)
 		data = JSON.parse(response.body) 
-				binding.pry
 		data["results"].collect do |result|
 			st_name = result["name"]
 			st_id = result["id"]
@@ -30,17 +29,20 @@ class ClimateTracker::NOAA_Data
 	end
 
 	def pull_data(date, state)
-		#NOAA program requires 1 year range for dataset ANNUAL. Create 1 year ago range from given date
+		#NOAA program requires range of 1 year for dataset ANNUAL. Create 1 year ago range from given date
 		date_array = date.split("-")
 		date_array[0] = date_array[0].to_i-1
 		last_year_date = date_array.join("-")
 		year_date = date
 
 		#retrieve appropriate state_code and download temperatures for above range
+		if @@states.empty?
+			self.class.states
+		end
 		state_code = @@states[state]
-		uri_start = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{state_code}&startdate=#{last_year_date}&enddate=#{year_date}&units=metric&limit=1000")
-		request = Net::HTTP::Get.new(uri_start.request_uri, initheader = @@header)
-		http = Net::HTTP.new(uri_start.host, uri_start.port).start 
+		uri = URI.parse("http://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=ANNUAL&datatypeid=#{@data_type}&locationid=#{state_code}&startdate=#{last_year_date}&enddate=#{year_date}&units=metric&limit=1000")
+		request = Net::HTTP::Get.new(uri.request_uri, initheader = @@header)
+		http = Net::HTTP.new(uri.host, uri.port).start 
 		response = http.request(request)
 		@data_dump = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February) ur
 		
