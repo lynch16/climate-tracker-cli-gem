@@ -74,7 +74,6 @@ class ClimateTracker::NOAA_Data
 		end
 
 		@year2_avgs = self.pull_data(year2, state).gather_values
-		binding.pry
 		delta_temp = (@year2_avgs - @year1_avgs).round(2) 
 		delta_percent = ((@year2_avgs/@year1_avgs)*100).round(2)
 		if delta_temp > 0 #if delta_temp is positive than temp went up
