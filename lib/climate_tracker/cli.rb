@@ -56,10 +56,9 @@ class ClimateTracker::CLI
             self.pick_state
         end
 
-		date = self.pick_date
-		@start_date = self.standarize_date(date)
+		@start_date = self.pick_date
 
-		puts "Processing..."
+		puts "Processing: #{@start_date} for #{@state}..."
 		#download avg monthly temp values for date & state, find average for month of year.
 		temp = @data_set.pull_data(@start_date, @state).gather_values
 		puts "#{@state}'s monthly average temperature on #{@start_date} was #{temp.round(2)}°F."
@@ -86,28 +85,23 @@ class ClimateTracker::CLI
 			puts "Would you like to pick a new target date? Current target is #{@start_date}? (y/n)"
 			@input = gets.strip.downcase
 			if @input == "y"
-				puts "What is your target date? (DD/MM/YYY)"
-				target_date = self.pick_date
-				@start_date = self.standarize_date(target_date)
+				@start_date = self.pick_date
 				@data_set.re_pull = true
 			end
 		else
-			puts "What is your target date? (DD/MM/YYY)"
-			target_date = self.pick_date
-			@start_date = self.standarize_date(target_date)
+			@start_date = self.pick_date
 		end
 
-		puts "Would you like to set a year to compare to? If not, will use one year ago today: #{@std_stop_date}. (y/n)"
+		puts "Would you like to set a date to compare to? If not, will use one year ago today: #{@std_stop_date}. (y/n)"
 		decide = gets.strip
 		if decide == "y" || decide == "yes"
 			puts "Please pick a date: (DD/MM/YYY)"
-			stop_date = self.pick_date
-			@stop_date = self.standarize_date(stop_date)
+			@stop_date = self.pick_date
 		else
 			@stop_date = @std_stop_date
 		end
 
-		puts "Processing..."
+		puts "Processing: #{@start_date} - #{@stop_date} for #{@state}..."
 		@delta_temp = @data_set.temp_difference(@start_date, @stop_date, @state)
 
 		puts "In #{@state}, #{@stop_date} was #{@delta_temp[0]}°F #{@delta_temp[2]} than #{@start_date} (#{(@delta_temp[1]-100).round(2)}% #{@delta_temp[3]})!"
@@ -118,7 +112,7 @@ class ClimateTracker::CLI
 		state = gets.strip.upcase
 		if state == 'STATES' || state == 'STATE'
 			puts "Gathering states..."
-			puts "#{ClimateTracker::NOAA_Data.states}"
+			puts "#{ClimateTracker::NOAA_Data.states}" #list all states available in API
 			puts ""
 			self.pick_state
 		elsif @data_set.class.states.include?(state)
@@ -138,15 +132,15 @@ class ClimateTracker::CLI
 			new_date = gets.strip
 		end
 		puts "Accepted."
-		new_date
+		self.standarize_date(new_date)
 	end
 
 	def date_valid?(date)
-		date =~ /\A\d{2}\/\d{2}\/\d{4}\z/ ? true : (return false)
+		date =~ /\A\d{2}\/\d{2}\/\d{4}\z/ ? true : (return false) #entered with correct format?
 		date_array = date.split("/")
-		date_array[0].to_i > 00 && date_array[0].to_i < 31 ? true : (return false)
-		date_array[1].to_i > 00 && date_array[1].to_i < 12 ? true : (return false)
-		date_array[2].to_i > 1775 && date_array[2].to_i < 2016 ? true : (return false)
+		date_array[0].to_i > 00 && date_array[0].to_i < 31 ? true : (return false) #days between 0 and 31
+		date_array[1].to_i > 00 && date_array[1].to_i < 12 ? true : (return false) #months between 1 and 12
+		date_array[2].to_i > 1775 && date_array[2].to_i < 2016 ? true : (return false) #years within range
 	end
 
 	def standarize_date(date)
