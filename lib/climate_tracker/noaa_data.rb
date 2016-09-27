@@ -46,7 +46,7 @@ class ClimateTracker::NOAA_Data
 		request = Net::HTTP::Get.new(uri.request_uri, initheader = @@header)
 		http = Net::HTTP.new(uri.host, uri.port).start
 		response = http.request(request)
-		@data_dump = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February) ur
+		@data_dump = JSON.parse(response.body) #returns are only for the month of the years in which this were called.  (ie. startdate XXXX-02-01 will only display February)
 
 		@pull_count += 1
 		@re_pull = false
@@ -59,9 +59,7 @@ class ClimateTracker::NOAA_Data
 			total_values += result["value"].to_f
 		end
 
-		@data_avg = (((total_values / @data_dump["results"].size)*(9.0/5.0))+32.0)
-
-		@data_avg #float
+		@data_avg = (((total_values / @data_dump["results"].size)*(9.0/5.0))+32.0) #convert average from C to F as a float
 	end
 
 	def temp_difference(year1, year2, state)
@@ -69,13 +67,13 @@ class ClimateTracker::NOAA_Data
 			@year1_avgs = self.pull_data(year1, state).gather_values
 		elsif @year1_avgs == nil
 			@year1_avgs = @data_avg
-		elsif @year2_avgs != @data_avg
+		elsif @year2_avgs != @data_avg #this is to try and fix an issue where on a 2nd comparision, year1_avgs and year2_avgs would be equal.
 			@year1_avgs = @data_avg
 		end
 
 		@year2_avgs = self.pull_data(year2, state).gather_values
-		delta_temp = (@year2_avgs - @year1_avgs).round(2)
-		delta_percent = ((@year2_avgs/@year1_avgs)*100).round(2)
+		temp_change = (@year2_avgs - @year1_avgs).round(2)
+		percentage_change = ((@year2_avgs/@year1_avgs)*100).round(2)
 		if delta_temp > 0 #if delta_temp is positive than temp went up
 			delta_descr = "warmer"
 			delta_descr_2 = "increase"
@@ -84,8 +82,6 @@ class ClimateTracker::NOAA_Data
 			delta_descr_2 = "decrease"
 		end
 
-		@delta_temp = [delta_temp, delta_percent, delta_descr, delta_descr_2] 
-
-		@delta_temp
+		@delta_temp = [delta_temp, delta_percent, delta_descr, delta_descr_2]
 	end
 end
