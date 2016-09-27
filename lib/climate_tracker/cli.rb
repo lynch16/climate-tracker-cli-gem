@@ -5,16 +5,16 @@ class ClimateTracker::CLI
 		current_date = DateTime.now.to_date.strftime("%F")
 		date_array = current_date.split("-")
 		date_array[0] = date_array[0].to_i-1
-		@std_stop_date = date_array.join("-") #Dataset doesn't go to 2016 so need to use 2015 as maximum year.
+		@std_stop_date = date_array.join("-") #Dataset doesn't go to 2016 so need to use 2015 as maximum year.  Also need to format for API requirements
 		@data_set = ClimateTracker::NOAA_Data.new
 	end
 
 	def call
 		puts ""
-		puts "Welcome to the Climate Tracker - New England"
+		puts "Welcome to the Climate Tracker"
 		puts ""
 		puts ""
-		puts "This Climate Tracker displays the average monthly temperature for any date the User requests for New England."
+		puts "This Climate Tracker displays the average monthly temperature for any date the User requests for any state in the United States."
 		puts ""
 		puts "Before we begin, a target state must be entered (this can be changed later if desired)."
 		self.pick_state
@@ -61,7 +61,7 @@ class ClimateTracker::CLI
 		puts "#{@state}'s monthly average temperature on #{@start_date} was #{temp.round(2)}°F."
 		@input = ""
 		puts "Would you like to pick a new state or compare this result to another date? (list or compare)"
-	end 
+	end
 
 	def compare
 		puts "This is the temperature comparision calculator. To begin, please answer a couple questions:"
@@ -124,7 +124,7 @@ class ClimateTracker::CLI
 
 	def pick_date
 		new_date = gets.strip
-		until self.date_valid?(new_date)	
+		until self.date_valid?(new_date)
 			puts "Invalid date or date format.  Please enter your target date: (DD/MM/YYY)"
 			new_date = gets.strip
 		end
@@ -149,4 +149,3 @@ class ClimateTracker::CLI
 		@input == "compare" || @input == "list" || @input == "exit" ? true : false
 	end
 end
-
