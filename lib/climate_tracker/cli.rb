@@ -16,8 +16,6 @@ class ClimateTracker::CLI
 		puts ""
 		puts "This Climate Tracker displays the average monthly temperature for any date the User requests for any state in the United States."
 		puts ""
-		# puts "Before we begin, a target state must be entered (this can be changed later if desired)."
-		# self.pick_state
 
 		@input = ""
 		until @input == "exit" do
@@ -93,8 +91,8 @@ class ClimateTracker::CLI
 		end
 
 		puts "Would you like to set a date to compare to? If not, will use one year ago today: #{@std_stop_date}. (y/n)"
-		decide = gets.strip
-		if decide == "y" || decide == "yes"
+		@input = gets.strip
+		if @input == "y" || @input == "yes"
 			puts "Please pick a date: (DD/MM/YYY)"
 			@stop_date = self.pick_date
 		else

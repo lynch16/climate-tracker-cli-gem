@@ -22,9 +22,7 @@ class ClimateTracker::NOAA_Data
 			response = http.request(request)
 			data = JSON.parse(response.body)
 			data["results"].collect do |result|
-				st_name = result["name"].upcase
-				st_id = result["id"]
-				@@states[st_name] = st_id
+                @@states[result["name"].upcase] = result["id"]
 			end
 		end
 		@@states.keys
@@ -54,7 +52,8 @@ class ClimateTracker::NOAA_Data
 	end
 
 	def gather_values
-		total_values = 0.000
+		total_values = 0.00
+
 		@data_dump["results"].each do |result|
 			total_values += result["value"].to_f
 		end
@@ -65,16 +64,14 @@ class ClimateTracker::NOAA_Data
 	def temp_difference(year1, year2, state)
 		if self.re_pull == true
 			@year1_avgs = self.pull_data(year1, state).gather_values
-		elsif @year1_avgs == nil
-			@year1_avgs = @data_avg
-		elsif @year2_avgs != @data_avg #this is to try and fix an issue where on a 2nd comparision, year1_avgs and year2_avgs would be equal.
+		elsif @year1_avgs == nil || @year2_avgs != @data_avg #this is to try and fix an issue where on a 2nd comparision, year1_avgs and year2_avgs would be equal.
 			@year1_avgs = @data_avg
 		end
 
 		@year2_avgs = self.pull_data(year2, state).gather_values
 		temp_change = (@year2_avgs - @year1_avgs).round(2)
 		percentage_change = ((@year2_avgs/@year1_avgs)*100).round(2)
-		if delta_temp > 0 #if delta_temp is positive than temp went up
+		if temp_change > 0 #if delta_temp is positive than temp went up
 			delta_descr = "warmer"
 			delta_descr_2 = "increase"
 		else
@@ -82,6 +79,6 @@ class ClimateTracker::NOAA_Data
 			delta_descr_2 = "decrease"
 		end
 
-		@delta_temp = [delta_temp, delta_percent, delta_descr, delta_descr_2]
+		@delta_temp = [temp_change, percentage_change, delta_descr, delta_descr_2]
 	end
 end
