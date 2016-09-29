@@ -24,7 +24,7 @@ class ClimateTracker::CLI
 
 			@input = gets.strip.downcase
 			until self.input_valid? do
-				puts "Please enter either 'list' or 'compare':"
+				puts "Please enter either 'list', 'compare' or 'exit':"
 				@input = gets.strip.downcase
 			end
 
@@ -47,7 +47,6 @@ class ClimateTracker::CLI
     		@input = gets.strip.downcase
     		if @input == "n"
     			@data_set.re_pull = true
-    			puts "Please pick a target state:"
     			self.pick_state
     		end
         else
@@ -61,7 +60,7 @@ class ClimateTracker::CLI
 		temp = @data_set.pull_data(@start_date, @state).gather_values
 		puts "#{@state}'s monthly average temperature on #{@start_date} was #{temp.round(2)}°F."
 		@input = "" #clear input
-		puts "Would you like to pick a new state or compare this result to another date?"
+		puts "Returning to Main Menu."
 	end
 
 	def compare
@@ -93,7 +92,6 @@ class ClimateTracker::CLI
 		puts "Would you like to set a date to compare to? If not, will use one year ago today: #{@std_stop_date}. (y/n)"
 		@input = gets.strip
 		if @input == "y" || @input == "yes"
-			puts "Please pick a date: (DD/MM/YYY)"
 			@stop_date = self.pick_date
 		else
 			@stop_date = @std_stop_date
