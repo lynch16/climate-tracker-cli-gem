@@ -24,7 +24,7 @@ class ClimateTracker::CLI
 
 			@input = gets.strip.downcase
 			until self.input_valid? do
-				puts "Please enter either 'list', 'compare' or 'exit':"
+				puts "Invalid input. Please enter either 'list', 'compare' or 'exit':"
 				@input = gets.strip.downcase
 			end
 
